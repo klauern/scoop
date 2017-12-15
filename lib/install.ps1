@@ -30,7 +30,12 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
         $check_hash = $false
     }
 
-    write-output "Installing '$app' ($version)."
+    if(!(supports_architecture $manifest $architecture)) {
+        write-host -f DarkRed "'$app' doesn't support $architecture architecture!"
+        return
+    }
+
+    write-output "Installing '$app' ($version) [$architecture]"
 
     $dir = ensure (versiondir $app $version $global)
     $original_dir = $dir # keep reference to real (not linked) directory
@@ -451,14 +456,20 @@ function check_hash($file, $url, $manifest, $arch) {
 }
 
 function compute_hash($file, $algname) {
-    $alg = [system.security.cryptography.hashalgorithm]::create($algname)
-    $fs = [system.io.file]::openread($file)
     try {
-        $hexbytes = $alg.computehash($fs) | % { $_.tostring('x2') }
-        [string]::join('', $hexbytes)
+        if([bool](Get-Command -Name Get-FileHash -ErrorAction SilentlyContinue) -eq $true) {
+            return (Get-FileHash -Path $file -Algorithm $algname).Hash.ToLower()
+        } else {
+            $fs = [system.io.file]::openread($file)
+            $alg = [system.security.cryptography.hashalgorithm]::create($algname)
+            $hexbytes = $alg.computehash($fs) | % { $_.tostring('x2') }
+            return [string]::join('', $hexbytes)
+        }
+    } catch {
+        error $_.exception.message
     } finally {
-        $fs.dispose()
-        $alg.dispose()
+        if($fs) { $fs.dispose() }
+        if($alg) { $alg.dispose() }
     }
 }
 

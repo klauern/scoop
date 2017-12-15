@@ -261,10 +261,14 @@ function ensure_in_path($dir, $global) {
 }
 
 function ensure_architecture($architecture_opt) {
+    if(!$architecture_opt) {
+        return default_architecture
+    }
+    $architecture_opt = $architecture_opt.ToString().ToLower()
     switch($architecture_opt) {
-        '' { return default_architecture }
-        { @('32bit','64bit') -contains $_ } { return $_ }
-        default { abort "Invalid architecture: '$architecture'."}
+        { @('64bit', '64', 'x64', 'amd64', 'x86_64', 'x86-64')  -contains $_ } { return '64bit' }
+        { @('32bit', '32', 'x86', 'i386', '386', 'i686')  -contains $_ } { return '32bit' }
+        default { throw [System.ArgumentException] "Invalid architecture: '$architecture_opt'"}
     }
 }
 
@@ -289,6 +293,7 @@ function ensure_all_installed($apps, $global) {
 }
 
 function strip_path($orig_path, $dir) {
+    if($orig_path -eq $null) { $orig_path = '' }
     $stripped = [string]::join(';', @( $orig_path.split(';') | ? { $_ -and $_ -ne $dir } ))
     return ($stripped -ne $orig_path), $stripped
 }
