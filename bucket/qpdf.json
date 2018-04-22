@@ -1,18 +1,18 @@
 {
     "homepage": "http://qpdf.sourceforge.net/",
-    "version": "7.0.0",
+    "version": "8.0.2",
     "license": "Apache-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://sourceforge.net/projects/qpdf/files/qpdf/7.0.0/qpdf-7.0.0-bin-mingw64.zip",
-            "hash": "sha512:8597fb4ed04d603e518c569e777b1f1a90662ee483f0d99464892a41d75708346f46a2fa9c8f2848b006511b6231a7fdc0b32e92ffc0a1707d9e859cab9f5bf9"
+            "url": "https://downloads.sourceforge.net/project/qpdf/qpdf/8.0.2/qpdf-8.0.2-bin-mingw64.zip",
+            "hash": "sha512:131c0e80cef702dda91ac22a526d2e8e93be4dbbd8d0855468559b8553a50b873559cea4432548494bd3b9ff80734b92c9df5482222087c7f168d25e9fe646bc"
         },
         "32bit": {
-            "url": "https://sourceforge.net/projects/qpdf/files/qpdf/7.0.0/qpdf-7.0.0-bin-mingw32.zip",
-            "hash": "sha512:e72153561fa30f5c7dba5378338f682f8714a480515dcdeac0f68e8318645a336e4f7bf09fc668932af2bb6cf41f405e4998d09607a3edae0d07345ee277b8b3"
+            "url": "https://downloads.sourceforge.net/project/qpdf/qpdf/8.0.2/qpdf-8.0.2-bin-mingw32.zip",
+            "hash": "sha512:edbf8ccbba2a811632ca3b63b574c332f535b1701c9db89fc3ef2a233cec41295b864a1aea35a35e5c1818615fb495ec9dcd4ae546496102da60d1db53290486"
         }
     },
-    "extract_dir": "qpdf-7.0.0",
+    "extract_dir": "qpdf-8.0.2",
     "bin": "bin\\qpdf.exe",
     "checkver": {
         "github": "https://github.com/qpdf/qpdf",
@@ -21,10 +21,10 @@
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://sourceforge.net/projects/qpdf/files/qpdf/$version/qpdf-$version-bin-mingw64.zip"
+                "url": "https://downloads.sourceforge.net/project/qpdf/qpdf/$version/qpdf-$version-bin-mingw64.zip"
             },
             "32bit": {
-                "url": "https://sourceforge.net/projects/qpdf/files/qpdf/$version/qpdf-$version-bin-mingw32.zip"
+                "url": "https://downloads.sourceforge.net/project/qpdf/qpdf/$version/qpdf-$version-bin-mingw32.zip"
             }
         },
         "extract_dir": "qpdf-$version",

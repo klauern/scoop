@@ -1,12 +1,16 @@
 {
-    "version": "1.9.2",
+    "version": "1.10.1",
     "homepage": "https://golang.org",
-    "license": "https://golang.org/LICENSE",
+    "license": "BSD-3-Clause",
     "extract_dir": "go",
     "env_set": {
         "GOROOT": "$dir"
     },
-    "bin": ["bin/go.exe","bin/gofmt.exe","bin/godoc.exe"],
+    "bin": [
+        "bin/go.exe",
+        "bin/gofmt.exe",
+        "bin/godoc.exe"
+    ],
     "installer": {
         "script": "add_first_in_path \"$env:USERPROFILE\\go\\bin\" $global"
     },
@@ -15,12 +19,12 @@
     },
     "architecture": {
         "64bit": {
-            "url": "https://storage.googleapis.com/golang/go1.9.2.windows-amd64.zip",
-            "hash": "682ec3626a9c45b657c2456e35cadad119057408d37f334c6c24d88389c2164c"
+            "url": "https://storage.googleapis.com/golang/go1.10.1.windows-amd64.zip",
+            "hash": "17f7664131202b469f4264161ff3cd0796e8398249d2b646bbe4990301afc678"
         },
         "32bit": {
-            "url": "https://storage.googleapis.com/golang/go1.9.2.windows-386.zip",
-            "hash": "35d3be5d7b97c6d11ffb76c1b19e20a824e427805ee918e82c08a2e5793eda20"
+            "url": "https://storage.googleapis.com/golang/go1.10.1.windows-386.zip",
+            "hash": "2f09edd066cc929bb362262afab27609e8d4b96f7dfd3f3844238e3214db9b8a"
         }
     },
     "checkver": "Build version go([\\d\\.]+)\\.",

@@ -9,9 +9,19 @@
 #     scoop alias add <name> <command> <description>
 #
 # e.g.:
-#     scoop alias add rm 'scoop uninstall $args[0]' "Uninstalls an app"
+#     scoop alias add rm 'scoop uninstall $args[0]' 'Uninstalls an app'
+#     scoop alias add upgrade 'scoop update *' 'Updates all apps, just like brew or apt'
+#
+# Options:
+#   -v, --verbose   Show alias description and table headers (works only for 'list')
 
-param($opt, $name, $command, $description)
+param(
+  [String]$opt,
+  [String]$name,
+  [String]$command,
+  [String]$description,
+  [Switch]$verbose = $false
+)
 
 . "$psscriptroot\..\lib\core.ps1"
 . "$psscriptroot\..\lib\help.ps1"
@@ -74,19 +84,25 @@ function rm_alias($name) {
 }
 
 function list_aliases {
-  $aliases = @{}
+  $aliases = @()
 
-  (init_alias_config).getenumerator() |% {
-    $summary = summary (gc (command_path $_.name) -raw)
-    if(!($summary)) { $summary = '' }
-    $aliases.add("$($_.name) ", $summary)
+  (init_alias_config).GetEnumerator() | ForEach-Object {
+    $content = Get-Content (command_path $_.name)
+    $command = ($content | Select-Object -Skip 1).Trim()
+    $summary = (summary $content).Trim()
+
+    $aliases += New-Object psobject -Property @{Name=$_.name; Summary=$summary; Command=$command}
   }
 
   if(!$aliases.count) {
     warn "No aliases founds."
   }
-
-  $aliases.getenumerator() | sort name | ft -hidetablehead -autosize -wrap
+  $aliases = $aliases.GetEnumerator() | Sort-Object Name
+  if($verbose) {
+    return $aliases | Select-Object Name, Command, Summary | Format-Table -autosize -wrap
+  } else {
+    return $aliases | Select-Object Name, Command | Format-Table -autosize -hidetablehead -wrap
+  }
 }
 
 switch($opt) {
@@ -95,3 +111,5 @@ switch($opt) {
   "list" { list_aliases }
   default { my_usage; exit 1 }
 }
+
+exit 0

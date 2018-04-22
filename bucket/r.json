@@ -1,17 +1,17 @@
 {
     "homepage": "https://www.r-project.org",
-    "version": "3.4.2",
-    "license": "GPL2",
+    "version": "3.4.4",
+    "license": "GPL-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://cran.rstudio.com/bin/windows/base/R-3.4.2-win.exe",
-            "hash": "8b3d1ef27432dd6fd6481302c24f43f3da2c9f7e4eaddd94d57d4e8fe413a1c6",
-            "pre_install": "copy-item -recurse $dir\\bin\\x64 $dir\\bin\\curr_arch"
+            "url": "https://cran.rstudio.com/bin/windows/base/R-3.4.4-win.exe",
+            "hash": "0ee0cd6ba4f3873c7dc361fd5603d6cdce2f11f048201d565a1af9467a339aa0",
+            "pre_install": "copy-item -recurse \"$dir\\bin\\x64\" \"$dir\\bin\\curr_arch\""
         },
         "32bit": {
-            "url": "https://cran.rstudio.com/bin/windows/base/R-3.4.2-win.exe",
-            "hash": "8b3d1ef27432dd6fd6481302c24f43f3da2c9f7e4eaddd94d57d4e8fe413a1c6",
-            "pre_install": "copy-item -recurse $dir\\bin\\i386 $dir\\bin\\curr_arch"
+            "url": "https://cran.rstudio.com/bin/windows/base/R-3.4.4-win.exe",
+            "hash": "0ee0cd6ba4f3873c7dc361fd5603d6cdce2f11f048201d565a1af9467a339aa0",
+            "pre_install": "copy-item -recurse \"$dir\\bin\\i386\" \"$dir\\bin\\curr_arch\""
         }
     },
     "innosetup": true,

@@ -36,7 +36,7 @@ function add_bucket($name, $repo) {
         if(!$repo) { "Unknown bucket '$name'. Try specifying <repo>."; $usage_add; exit 1 }
     }
 
-    $git = try { gcm 'git' -ea stop } catch { $null }
+    $git = try { Get-Command 'git' -ea stop } catch { $null }
     if(!$git) {
         abort "Git is required for buckets. Run 'scoop install git'."
     }
@@ -56,7 +56,7 @@ function add_bucket($name, $repo) {
 
     ensure $bucketsdir > $null
     $dir = ensure $dir
-    git_clone "$repo" "`"$dir`""
+    git_clone "$repo" "`"$dir`"" -q
     success "The $name bucket was added successfully."
 }
 
@@ -67,7 +67,7 @@ function rm_bucket($name) {
         abort "'$name' bucket not found."
     }
 
-    rm $dir -r -force -ea stop
+    Remove-Item $dir -r -force -ea stop
 }
 
 function list_buckets {
@@ -75,7 +75,7 @@ function list_buckets {
 }
 
 function known_buckets {
-    known_bucket_repos |% { $_.psobject.properties | select -expand 'name' }
+    known_bucket_repos | ForEach-Object { $_.psobject.properties | Select-Object -expand 'name' }
 }
 
 switch($cmd) {
@@ -85,3 +85,5 @@ switch($cmd) {
     "known" { known_buckets }
     default { "scoop bucket: cmd '$cmd' not supported"; my_usage; exit 1 }
 }
+
+exit 0

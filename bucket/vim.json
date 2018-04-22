@@ -1,21 +1,80 @@
 {
     "homepage": "http://www.vim.org",
-    "license": "http://vimdoc.sourceforge.net/htmldoc/uganda.html#license",
-    "version": "8.0.1305",
+    "license": "Vim",
+    "version": "8.0.1747",
     "architecture": {
         "32bit": {
-            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1305/gvim_8.0.1305_x86.zip",
-            "hash": "74318f072a234f441e84485017162613257ef9ae120a259a1f605d46084aafb1"
+            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1747/gvim_8.0.1747_x86.zip",
+            "hash": "b79eee834d4914a39b9c9a227707edf4c5ab61de41622b40c1a0c6b34c78c12e"
         },
         "64bit": {
-            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1305/gvim_8.0.1305_x64.zip",
-            "hash": "c21e225cabc3f2247c99ee547183535a9c7c84f04fad6d2545ded006e9b2697b"
+            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1747/gvim_8.0.1747_x64.zip",
+            "hash": "d6491187bf83c9f1b2309455f50bd779a9463c0b617eec99635eb8fe48109876"
         }
     },
     "extract_dir": "vim\\vim80",
     "bin": [
         "vim.exe",
-        "gvim.exe"
+        [
+            "vim.exe",
+            "vi"
+        ],
+        [
+            "vim.exe",
+            "ex",
+            "-e"
+        ],
+        [
+            "vim.exe",
+            "view",
+            "-R"
+        ],
+        [
+            "vim.exe",
+            "rvim",
+            "-Z"
+        ],
+        [
+            "vim.exe",
+            "rview",
+            "-RZ"
+        ],
+        [
+            "vim.exe",
+            "vimdiff",
+            "-d"
+        ],
+        "gvim.exe",
+        [
+            "gvim.exe",
+            "gview",
+            "-R"
+        ],
+        [
+            "gvim.exe",
+            "evim",
+            "-y"
+        ],
+        [
+            "gvim.exe",
+            "eview",
+            "-Ry"
+        ],
+        [
+            "gvim.exe",
+            "rgvim",
+            "-Z"
+        ],
+        [
+            "gvim.exe",
+            "rgview",
+            "-RZ"
+        ],
+        [
+            "gvim.exe",
+            "gvimdiff",
+            "-d"
+        ]
     ],
     "post_install": "if( !(test-path ~\\.vimrc) -and !(test-path ~\\_vimrc) -and !(test-path ~\\vimfiles\\vimrc) -and !(test-path $env:VIM\\_vimrc) ) {
         cp \"$dir\\vimrc_example.vim\" ~\\_vimrc

@@ -1,17 +1,17 @@
 {
     "homepage": "https://mariadb.org",
-    "version": "10.2.10",
-    "license": "GPL2",
+    "version": "10.2.14",
+    "license": "GPL-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://downloads.mariadb.org/f/mariadb-10.2.10/winx64-packages/mariadb-10.2.10-winx64.zip",
-            "hash": "3ceddcc60e560863304524c3a1ab6c9467182e34437df57ba25ddaa2d2d244ba",
-            "extract_dir": "mariadb-10.2.10-winx64"
+            "url": "https://downloads.mariadb.org/f/mariadb-10.2.14/winx64-packages/mariadb-10.2.14-winx64.zip",
+            "hash": "01dabe0ddb4387a76e2c2c387c0967c9436692f85dc3c439b249464d80ce99c3",
+            "extract_dir": "mariadb-10.2.14-winx64"
         },
         "32bit": {
-            "url": "https://downloads.mariadb.org/f/mariadb-10.2.10/win32-packages/mariadb-10.2.10-win32.zip",
-            "hash": "0a92175a1b53b613b9448137916ab7d7a936533b06fbceec4c3f19840d7f84e1",
-            "extract_dir": "mariadb-10.2.10-win32"
+            "url": "https://downloads.mariadb.org/f/mariadb-10.2.14/win32-packages/mariadb-10.2.14-win32.zip",
+            "hash": "2f7bfb03692c701c07f786c8009b6600748b92ff7328374a05bb534a9017999f",
+            "extract_dir": "mariadb-10.2.14-win32"
         }
     },
     "bin": [
@@ -35,10 +35,7 @@
         "bin\\mysqlshow.exe",
         "bin\\mysqlslap.exe",
         "bin\\mysqltest.exe",
-        "bin\\mysqltest_embedded.exe",
         "bin\\mysql_client_test.exe",
-        "bin\\mysql_client_test_embedded.exe",
-        "bin\\mysql_embedded.exe",
         "bin\\mysql_install_db.exe",
         "bin\\mysql_plugin.exe",
         "bin\\mysql_tzinfo_to_sql.exe",
@@ -50,6 +47,14 @@
     "persist": [
         "data"
     ],
+    "post_install": "#Initialize data directory (without generating root password)
+    if (!(Test-Path \"$dir\\data\\auto.cnf\")) {
+        mysqld --initialize-insecure
+    }",
+    "notes": "Run following command as administrator to run MariaDB as a service.
+
+mysqld --install \"[Service Name(default:MySQL)]\"
+",
     "checkver": {
         "url": "https://downloads.mariadb.org/",
         "re": "Download ([\\d.]+) Stable"

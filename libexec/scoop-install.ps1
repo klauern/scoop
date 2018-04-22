@@ -52,12 +52,17 @@ if($err) { "scoop install: $err"; exit 1 }
 $global = $opt.g -or $opt.global
 $independent = $opt.i -or $opt.independent
 $use_cache = !($opt.k -or $opt.'no-cache')
-$architecture = ensure_architecture ($opt.a + $opt.arch)
+$architecture = default_architecture
+try {
+    $architecture = ensure_architecture ($opt.a + $opt.arch)
+} catch {
+    abort "ERROR: $_"
+}
 
-if(!$apps) { 'ERROR: <app> missing'; my_usage; exit 1 }
+if(!$apps) { error '<app> missing'; my_usage; exit 1 }
 
 if($global -and !(is_admin)) {
-    'ERROR: you need admin rights to install global apps'; exit 1
+    abort 'ERROR: you need admin rights to install global apps'
 }
 
 if(is_scoop_outdated) {
@@ -104,13 +109,13 @@ ensure_none_failed $apps $global
 
 $apps, $skip = prune_installed $apps $global
 
-$skip | ? { $explicit_apps -contains $_} | % {
+$skip | Where-Object { $explicit_apps -contains $_} | ForEach-Object {
     $version = @(versions $_ $global)[-1]
     warn "'$_' ($version) is already installed. Skipping."
 }
 
 $suggested = @{};
-$apps | % { install_app $_ $architecture $global $suggested $use_cache }
+$apps | ForEach-Object { install_app $_ $architecture $global $suggested $use_cache }
 
 show_suggestions $suggested
 

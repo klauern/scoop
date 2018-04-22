@@ -30,7 +30,12 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
         $check_hash = $false
     }
 
-    write-output "Installing '$app' ($version)."
+    if(!(supports_architecture $manifest $architecture)) {
+        write-host -f DarkRed "'$app' doesn't support $architecture architecture!"
+        return
+    }
+
+    write-output "Installing '$app' ($version) [$architecture]"
 
     $dir = ensure (versiondir $app $version $global)
     $original_dir = $dir # keep reference to real (not linked) directory
@@ -104,7 +109,7 @@ function dl_with_cache($app, $version, $url, $to, $cookies = $null, $use_cache =
         Move-Item "$cached.download" $cached -force
     } else { write-host "Loading $(url_remote_filename $url) from cache"}
 
-    if (!($to -eq $null)) {
+    if (!($null -eq $to)) {
         Copy-Item $cached $to
     }
 }
@@ -129,7 +134,8 @@ function set_https_protocols($protocols) {
 
 function do_dl($url, $to, $cookies) {
     $original_protocols = use_any_https_protocol
-    $progress = [console]::isoutputredirected -eq $false
+    $progress = [console]::isoutputredirected -eq $false -and
+        $host.name -ne 'Windows PowerShell ISE Host'
 
     try {
         $url = handle_special_urls $url
@@ -147,8 +153,10 @@ function do_dl($url, $to, $cookies) {
 function dl($url, $to, $cookies, $progress) {
     $wreq = [net.webrequest]::create($url)
     if($wreq -is [net.httpwebrequest]) {
-        $wreq.useragent = 'Scoop/1.0'
-        $wreq.referer = strip_filename $url
+        $wreq.useragent = Get-UserAgent
+        if (-not ($url -imatch "https?://downloads.sourceforge.net/")) {
+            $wreq.referer = strip_filename $url
+        }
         if($cookies) {
             $wreq.headers.add('Cookie', (cookie_header $cookies))
         }
@@ -309,7 +317,7 @@ function dl_urls($app, $version, $manifest, $architecture, $dir, $use_cache = $t
             if(!$ok) {
                 # rm cached
                 $cached = cache_path $app $version $url
-                if(test-path $cached) { rm -force $cached }
+                if(test-path $cached) { Remove-Item -force $cached }
                 abort $err
             }
         }
@@ -347,7 +355,7 @@ function dl_urls($app, $version, $manifest, $architecture, $dir, $use_cache = $t
             write-host "Extracting... " -nonewline
             $null = mkdir "$dir\_tmp"
             & $extract_fn "$dir\$fname" "$dir\_tmp"
-            rm "$dir\$fname"
+            Remove-Item "$dir\$fname"
             if ($extract_to) {
                 $null = mkdir "$dir\$extract_to" -force
             }
@@ -357,9 +365,9 @@ function dl_urls($app, $version, $manifest, $architecture, $dir, $use_cache = $t
 
             if(test-path "$dir\_tmp") { # might have been moved by movedir
                 try {
-                    rm -r -force "$dir\_tmp" -ea stop
+                    Remove-Item -r -force "$dir\_tmp" -ea stop
                 } catch [system.io.pathtoolongexception] {
-                    cmd /c "rmdir /s /q $dir\_tmp"
+                    & "$env:COMSPEC" /c "rmdir /s /q $dir\_tmp"
                 } catch [system.unauthorizedaccessexception] {
                     warn "Couldn't remove $dir\_tmp: unauthorized access."
                 }
@@ -389,7 +397,7 @@ function lessmsi_config ($extract_dir) {
 function cookie_header($cookies) {
     if(!$cookies) { return }
 
-    $vals = $cookies.psobject.properties | % {
+    $vals = $cookies.psobject.properties | ForEach-Object {
         "$($_.name)=$($_.value)"
     }
 
@@ -410,7 +418,7 @@ function ftp_file_size($url) {
 
 # hashes
 function hash_for_url($manifest, $url, $arch) {
-    $hashes = @(hash $manifest $arch) | ? { $_ -ne $null };
+    $hashes = @(hash $manifest $arch) | Where-Object { $_ -ne $null };
 
     if($hashes.length -eq 0) { return $null }
 
@@ -451,25 +459,31 @@ function check_hash($file, $url, $manifest, $arch) {
 }
 
 function compute_hash($file, $algname) {
-    $alg = [system.security.cryptography.hashalgorithm]::create($algname)
-    $fs = [system.io.file]::openread($file)
     try {
-        $hexbytes = $alg.computehash($fs) | % { $_.tostring('x2') }
-        [string]::join('', $hexbytes)
+        if([bool](Get-Command -Name Get-FileHash -ErrorAction SilentlyContinue) -eq $true) {
+            return (Get-FileHash -Path $file -Algorithm $algname).Hash.ToLower()
+        } else {
+            $fs = [system.io.file]::openread($file)
+            $alg = [system.security.cryptography.hashalgorithm]::create($algname)
+            $hexbytes = $alg.computehash($fs) | ForEach-Object { $_.tostring('x2') }
+            return [string]::join('', $hexbytes)
+        }
+    } catch {
+        error $_.exception.message
     } finally {
-        $fs.dispose()
-        $alg.dispose()
+        if($fs) { $fs.dispose() }
+        if($alg) { $alg.dispose() }
     }
 }
 
 function cmd_available($cmd) {
-    try { gcm $cmd -ea stop | out-null } catch { return $false }
+    try { Get-Command $cmd -ea stop | out-null } catch { return $false }
     $true
 }
 
 # for dealing with installers
 function args($config, $dir, $global) {
-    if($config) { return $config | % { (format $_ @{'dir'=$dir;'global'=$global}) } }
+    if($config) { return $config | ForEach-Object { (format $_ @{'dir'=$dir;'global'=$global}) } }
     @()
 }
 
@@ -510,11 +524,11 @@ function unpack_inno($fname, $manifest, $dir) {
         abort "Failed to unpack innosetup file. See $dir\innounp.log"
     }
 
-    gci "$dir\_scoop_unpack\{app}" -r | mv -dest "$dir" -force
+    Get-ChildItem "$dir\_scoop_unpack\{app}" -r | Move-Item -dest "$dir" -force
 
-    rmdir -r -force "$dir\_scoop_unpack"
+    Remove-Item -r -force "$dir\_scoop_unpack"
 
-    rm "$dir\$fname"
+    Remove-Item "$dir\$fname"
     write-host "done."
 }
 
@@ -524,7 +538,7 @@ function run_installer($fname, $manifest, $architecture, $dir, $global) {
     $installer = installer $manifest $architecture
     if($installer.script) {
         write-output "Running installer script..."
-        iex $installer.script
+        Invoke-Expression $installer.script
         return
     }
 
@@ -558,19 +572,19 @@ function install_msi($fname, $dir, $msi) {
     if(!$installed) {
         abort "Installation aborted. You might need to run 'scoop uninstall $app' before trying again."
     }
-    rm $logfile
-    rm $msifile
+    Remove-Item $logfile
+    Remove-Item $msifile
 }
 
 function extract_msi($path, $to) {
     $logfile = "$(split-path $path)\msi.log"
     $ok = run 'msiexec' @('/a', "`"$path`"", '/qn', "TARGETDIR=`"$to`"", "/lwe `"$logfile`"")
     if(!$ok) { abort "Failed to extract files from $path.`nLog file:`n  $(friendly_path $logfile)" }
-    if(test-path $logfile) { rm $logfile }
+    if(test-path $logfile) { Remove-Item $logfile }
 }
 
 function extract_lessmsi($path, $to) {
-    iex "lessmsi x `"$path`" `"$to\`""
+    Invoke-Expression "lessmsi x `"$path`" `"$to\`""
 }
 
 # deprecated
@@ -580,7 +594,7 @@ function extract_lessmsi($path, $to) {
 function msi_installed($code) {
     $path = "hklm:\software\microsoft\windows\currentversion\uninstall\$code"
     if(!(test-path $path)) { return $false }
-    $key = gi $path
+    $key = Get-Item $path
     $name = $key.getvalue('displayname')
     $version = $key.getvalue('displayversion')
     $classkey = "IdentifyingNumber=`"$code`",Name=`"$name`",Version=`"$version`""
@@ -604,7 +618,7 @@ function install_prog($fname, $dir, $installer, $global) {
 
         # Don't remove installer if "keep" flag is set to true
         if(!($installer.keep -eq "true")) {
-            rm $prog
+            Remove-Item $prog
         }
     }
 }
@@ -614,7 +628,7 @@ function run_uninstaller($manifest, $architecture, $dir) {
     $uninstaller = uninstaller $manifest $architecture
     if($uninstaller.script) {
         write-output "Running uninstaller script..."
-        iex $uninstaller.script
+        Invoke-Expression $uninstaller.script
         return
     }
 
@@ -664,7 +678,7 @@ function shim_def($item) {
 
 function create_shims($manifest, $dir, $global, $arch) {
     $shims = @(arch_specific 'bin' $manifest $arch)
-    $shims | ?{ $_ -ne $null } | % {
+    $shims | Where-Object { $_ -ne $null } | ForEach-Object {
         $target, $name, $arg = shim_def $_
         write-output "Creating shim for '$name'."
 
@@ -675,7 +689,7 @@ function create_shims($manifest, $dir, $global, $arch) {
         }
         if(!(test-path $bin)) { abort "Can't shim '$target': File doesn't exist."}
 
-        shim "$dir\$target" $global $name $arg
+        shim "$dir\$target" $global $name (substitute $arg @{ '$dir' = $dir; '$original_dir' = $original_dir; '$persist_dir' = $persist_dir})
     }
 }
 
@@ -686,19 +700,21 @@ function rm_shim($name, $shimdir) {
         warn "Shim for '$name' is missing. Skipping."
     } else {
         write-output "Removing shim for '$name'."
-        rm $shim
+        Remove-Item $shim
     }
 
     # other shim types might be present
-    '.exe', '.shim', '.cmd' | % {
-        if(test-path "$shimdir\$name$_") { rm "$shimdir\$name$_" }
+    '', '.exe', '.shim', '.cmd' | ForEach-Object {
+        if(test-path -Path "$shimdir\$name$_" -PathType leaf) {
+            Remove-Item "$shimdir\$name$_"
+        }
     }
 }
 
 function rm_shims($manifest, $global, $arch) {
     $shims = @(arch_specific 'bin' $manifest $arch)
 
-    $shims | ?{ $_ -ne $null } | % {
+    $shims | Where-Object { $_ -ne $null } | ForEach-Object {
         $target, $name, $null = shim_def $_
         $shimdir = shimdir $global
 
@@ -733,10 +749,10 @@ function link_current($versiondir) {
     if(test-path $currentdir) {
         # remove the junction
         attrib -R /L $currentdir
-        cmd /c rmdir $currentdir
+        & "$env:COMSPEC" /c rmdir $currentdir
     }
 
-    cmd /c mklink /j $currentdir $versiondir | out-null
+    & "$env:COMSPEC" /c mklink /j $currentdir $versiondir | out-null
     attrib $currentdir +R /L
     return $currentdir
 }
@@ -757,7 +773,7 @@ function unlink_current($versiondir) {
         attrib $currentdir -R /L
 
         # remove the junction
-        cmd /c rmdir $currentdir
+        & "$env:COMSPEC" /c "rmdir $currentdir"
         return $currentdir
     }
     return $versiondir
@@ -769,14 +785,14 @@ function ensure_install_dir_not_in_path($dir, $global) {
 
     $fixed, $removed = find_dir_or_subdir $path "$dir"
     if($removed) {
-        $removed | % { "Installer added '$(friendly_path $_)' to path. Removing."}
+        $removed | ForEach-Object { "Installer added '$(friendly_path $_)' to path. Removing."}
         env 'path' $global $fixed
     }
 
     if(!$global) {
         $fixed, $removed = find_dir_or_subdir (env 'path' $true) "$dir"
         if($removed) {
-            $removed | % { warn "Installer added '$_' to system path. You might want to remove this manually (requires admin permission)."}
+            $removed | ForEach-Object { warn "Installer added '$_' to system path. You might want to remove this manually (requires admin permission)."}
         }
     }
 }
@@ -785,7 +801,7 @@ function find_dir_or_subdir($path, $dir) {
     $dir = $dir.trimend('\')
     $fixed = @()
     $removed = @()
-    $path.split(';') | % {
+    $path.split(';') | ForEach-Object {
         if($_) {
             if(($_ -eq $dir) -or ($_ -like "$dir\*")) { $removed += $_ }
             else { $fixed += $_ }
@@ -795,7 +811,7 @@ function find_dir_or_subdir($path, $dir) {
 }
 
 function env_add_path($manifest, $dir, $global) {
-    $manifest.env_add_path | ? { $_ } | % {
+    $manifest.env_add_path | Where-Object { $_ } | ForEach-Object {
         $path_dir = join-path $dir $_
 
         if(!(is_in_dir $dir $path_dir)) {
@@ -819,7 +835,7 @@ function add_first_in_path($dir, $global) {
 
 function env_rm_path($manifest, $dir, $global) {
     # remove from path
-    $manifest.env_add_path | ? { $_ } | % {
+    $manifest.env_add_path | Where-Object { $_ } | ForEach-Object {
         $path_dir = join-path $dir $_
 
         remove_from_path $path_dir $global
@@ -828,20 +844,20 @@ function env_rm_path($manifest, $dir, $global) {
 
 function env_set($manifest, $dir, $global) {
     if($manifest.env_set) {
-        $manifest.env_set | gm -member noteproperty | % {
+        $manifest.env_set | Get-Member -member noteproperty | ForEach-Object {
             $name = $_.name;
             $val = format $manifest.env_set.$($_.name) @{ "dir" = $dir }
             env $name $global $val
-            sc env:\$name $val
+            Set-Content env:\$name $val
         }
     }
 }
 function env_rm($manifest, $global) {
     if($manifest.env_set) {
-        $manifest.env_set | gm -member noteproperty | % {
+        $manifest.env_set | Get-Member -member noteproperty | ForEach-Object {
             $name = $_.name
             env $name $global $null
-            if(test-path env:\$name) { rm env:\$name }
+            if(test-path env:\$name) { Remove-Item env:\$name }
         }
     }
 }
@@ -873,7 +889,7 @@ function pre_install($manifest, $arch) {
     $pre_install = arch_specific 'pre_install' $manifest $arch
     if($pre_install) {
         write-output "Running pre-install script..."
-        iex $pre_install
+        Invoke-Expression (@($pre_install) -join "`r`n")
     }
 }
 
@@ -881,7 +897,7 @@ function post_install($manifest, $arch) {
     $post_install = arch_specific 'post_install' $manifest $arch
     if($post_install) {
         write-output "Running post-install script..."
-        iex $post_install
+        Invoke-Expression (@($post_install) -join "`r`n")
     }
 }
 
@@ -894,7 +910,7 @@ function show_notes($manifest, $dir, $original_dir, $persist_dir) {
 }
 
 function all_installed($apps, $global) {
-    $apps | ? {
+    $apps | Where-Object {
         $app, $null = app $_
         installed $app $global
     }
@@ -904,7 +920,7 @@ function all_installed($apps, $global) {
 function prune_installed($apps, $global) {
     $installed = @(all_installed $apps $global)
 
-    $uninstalled = $apps | ? { $installed -notcontains $_ }
+    $uninstalled = $apps | Where-Object { $installed -notcontains $_ }
 
     return @($uninstalled), @($installed)
 }
@@ -930,7 +946,7 @@ function show_suggestions($suggested) {
     $installed_apps = (installed_apps $true) + (installed_apps $false)
 
     foreach($app in $suggested.keys) {
-        $features = $suggested[$app] | get-member -type noteproperty |% { $_.name }
+        $features = $suggested[$app] | get-member -type noteproperty | ForEach-Object { $_.name }
         foreach($feature in $features) {
             $feature_suggestions = $suggested[$app].$feature
 
@@ -977,7 +993,7 @@ function persist_data($manifest, $original_dir, $persist_dir) {
             $persist = @($persist);
         }
 
-        $persist | % {
+        $persist | ForEach-Object {
             $source, $target = persist_def $_
 
             write-host "Persisting $source"
@@ -998,7 +1014,7 @@ function persist_data($manifest, $original_dir, $persist_dir) {
                     Move-Item $source $target
                 } elseif($target.GetType() -eq [System.IO.DirectoryInfo]) {
                     # if there is no source and it's a directory we create an empty directory
-                    ensure $target.FullName
+                    ensure $target.FullName | out-null
                 }
             } elseif ($source.Exists) {
                 # (re)move original (keep a copy)
@@ -1007,10 +1023,10 @@ function persist_data($manifest, $original_dir, $persist_dir) {
 
             # create link
             if (is_directory $target) {
-                cmd /c "mklink /j `"$source`" `"$target`"" | out-null
+                & "$env:COMSPEC" /c "mklink /j `"$source`" `"$target`"" | out-null
                 attrib $source.FullName +R /L
             } else {
-                cmd /c "mklink /h `"$source`" `"$target`"" | out-null
+                & "$env:COMSPEC" /c "mklink /h `"$source`" `"$target`"" | out-null
             }
         }
     }

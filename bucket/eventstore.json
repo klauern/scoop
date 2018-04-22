@@ -1,9 +1,9 @@
 {
     "homepage": "https://eventstore.org/",
-    "license": "BSD 3-Clause",
-    "version": "4.0.3",
-    "url": "https://eventstore.org/downloads/EventStore-OSS-Win-v4.0.3.zip",
-    "hash": "F76113C88BD6DB078C92A663516E7899A5391D960A4A6C977481F7F296DA5F8B",
+    "license": "BSD-3-Clause",
+    "version": "4.1.0",
+    "url": "https://eventstore.org/downloads/EventStore-OSS-Win-v4.1.0.zip",
+    "hash": "4377159cccbe90e59c974598a630ba8f904d24daa082bc35478fd47af3816d64",
     "bin": [
         [
             "EventStore.ClusterNode.exe",

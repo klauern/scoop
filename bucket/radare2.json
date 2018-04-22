@@ -1,18 +1,31 @@
 {
-    "version": "2.0.1",
-    "license": "GPL2",
+    "version": "2.5.0",
+    "license": "GPL-2.0",
     "homepage": "https://www.radare.org/r/",
     "architecture": {
         "64bit": {
-            "url": "https://radare.mikelloc.com/get/2.0.1/radare2-w64-2.0.1.zip",
-            "hash": "sha1:0d10db6a27c7bb4ef329f25ffde395b94d77f94e",
-            "extract_dir": "radare2-w64-2.0.1"
+            "url": "https://radare.mikelloc.com/get/2.5.0/radare2_installer-msvc_64-2.5.0.exe",
+            "hash": "sha1:17da9a0af6c13617e67ab3fffab8be2678ad6b1c"
         },
         "32bit": {
-            "url": "https://radare.mikelloc.com/get/2.0.1/radare2-w32-2.0.1.zip",
-            "hash": "sha1:c8a25f003ec82e84394c1e646553065055cf0cec",
-            "extract_dir": "radare2-w32-2.0.1"
+            "url": "https://radare.mikelloc.com/get/2.5.0/radare2_installer-msvc_32-2.5.0.exe",
+            "hash": "sha1:08bd9ab9fde634bb5f1896fce7b79428f44daafb"
         }
+    },
+    "installer": {
+        "args": [
+            "/SILENT",
+            "/SUPPRESSMSGBOXES",
+            "/DIR=$dir"
+        ]
+    },
+    "uninstaller": {
+        "file": "unins000.exe",
+        "args": [
+            "/SILENT",
+            "/SUPPRESSMSGBOXES",
+            "/NOCANCEL"
+        ]
     },
     "bin": [
         "r2agent.exe",
@@ -27,18 +40,16 @@
         "rax2.exe"
     ],
     "checkver": {
-        "url": "http://www.radare.org/r/down.html",
+        "url": "https://www.radare.org/r/down.html",
         "re": "last release is ([\\d.]+)"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://radare.mikelloc.com/get/$version/radare2-w64-$version.zip",
-                "extract_dir": "radare2-w64-$version"
+                "url": "https://radare.mikelloc.com/get/$version/radare2_installer-msvc_64-$version.exe"
             },
             "32bit": {
-                "url": "https://radare.mikelloc.com/get/$version/radare2-w32-$version.zip",
-                "extract_dir": "radare2-w32-$version"
+                "url": "https://radare.mikelloc.com/get/$version/radare2_installer-msvc_32-$version.exe"
             }
         },
         "hash": {

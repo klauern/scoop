@@ -1,20 +1,21 @@
 {
     "homepage": "http://windows.php.net",
-    "version": "7.1.11",
-    "license": "https://php.net/license/",
+    "version": "7.2.4",
+    "license": "PHP-3.01",
     "architecture": {
         "64bit": {
-            "url": "http://windows.php.net/downloads/releases/php-7.1.11-nts-Win32-VC14-x64.zip",
-            "hash": "3a1b74b6c13c6f773387da50f90e2c79706153d7af4641c00ac48a29473d4d94"
+            "url": "https://windows.php.net/downloads/releases/php-7.2.4-nts-Win32-VC15-x64.zip",
+            "hash": "c5b4f404179de9c87705b76f5d7e8f48243e71510692692fe82f6ea204f44db1"
         },
         "32bit": {
-            "url": "http://windows.php.net/downloads/releases/php-7.1.11-nts-Win32-VC14-x86.zip",
-            "hash": "4fda5b50c9ff0d99f0b5664ac85a3ac0fa75769ba40c67bf220fe2e5676bbece"
+            "url": "https://windows.php.net/downloads/releases/php-7.2.4-nts-Win32-VC15-x86.zip",
+            "hash": "95d85e94f313bd74fbee6fe2bcd71af5b1cad8cfc0b4c863b177901cc257c400"
         }
     },
     "bin": [
         "php.exe",
-        "php-cgi.exe"
+        "php-cgi.exe",
+        "phpdbg.exe"
     ],
     "persist": [
         "cli",
@@ -43,15 +44,15 @@ if (!(Test-Path \"$dir\\cli\\conf.d\")) {
 ",
     "checkver": {
         "url": "http://windows.php.net/download/",
-        "re": "<h3 id=\"php-7.1\".*?>.*?\\(([\\d.]+)\\)</h3>"
+        "re": "<h3 id=\"php-7.2\".*?>.*?\\(([\\d.]+)\\)</h3>"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "http://windows.php.net/downloads/releases/php-$version-nts-Win32-VC14-x64.zip"
+                "url": "https://windows.php.net/downloads/releases/php-$version-nts-Win32-VC15-x64.zip"
             },
             "32bit": {
-                "url": "http://windows.php.net/downloads/releases/php-$version-nts-Win32-VC14-x86.zip"
+                "url": "https://windows.php.net/downloads/releases/php-$version-nts-Win32-VC15-x86.zip"
             }
         },
         "hash": {

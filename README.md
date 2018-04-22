@@ -6,7 +6,7 @@ Scoop is a command-line installer for Windows.
 Requirements:
 
 * [PowerShell 3](https://www.microsoft.com/en-us/download/details.aspx?id=34595)
-* PowerShell must be enabled for your user account e.g. `set-executionpolicy remotesigned -s cu`
+* PowerShell must be enabled for your user account e.g. `set-executionpolicy remotesigned -s currentuser`
 
 To install:
 
@@ -30,7 +30,7 @@ Scoop is very scriptable, so you can run repeatable setups to get your environme
 ```powershell
 scoop install sudo
 sudo scoop install 7zip git openssh --global
-scoop install curl grep sed less tail touch
+scoop install curl grep sed less touch
 scoop install python ruby go perl
 ```
 

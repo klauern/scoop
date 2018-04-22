@@ -6,7 +6,8 @@ $project_file_exclusions = @(
     $([regex]::Escape($repo_dir)+'(\\|/).git(\\|/).*$'),
     '.sublime-workspace$',
     '.DS_Store$',
-    'supporting(\\|/)validator(\\|/)packages(\\|/)*'
+    'supporting(\\|/)validator(\\|/)packages(\\|/)*',
+    'supporting(\\|/)shimexe(\\|/)packages(\\|/)*'
 )
 
 describe 'Project code' {
@@ -96,10 +97,38 @@ describe 'Style constraints for non-binary project files' {
         # utf-8 BOM == 0xEF 0xBB 0xBF
         # see http://www.powershellmagazine.com/2012/12/17/pscxtip-how-to-determine-the-byte-order-mark-of-a-text-file @@ https://archive.is/RgT42
         # ref: http://poshcode.org/2153 @@ https://archive.is/sGnnu
+
+        # As of PowerShell 6.0, `Get-Content` on non-Windows platform does not support `-Encoding Byte`
+        # The following try-catch is to work around that by using .NET framework
+        $read_bytes_type = 'default'
+        function read_bytes ([string]$FileName, [int]$Size) {
+            if ($read_bytes_type -eq 'default') {
+                return Get-Content "$FileName" -Encoding Byte -TotalCount $Size
+            }
+            else {
+                $buffer = [byte[]](0, 0, 0)
+                $fstream = (New-Object -TypeName System.IO.FileStream -ArgumentList ("$FileName", [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read))
+                $fstream.Read($buffer, 0, $Size) > $null
+                return $buffer
+            }
+        }
+        try {
+            # Following would throw exception if `-Encoding Byte` is not supported
+            $null = read_bytes -FileName $MyInvocation.PSCommandPath -Size 3
+        }
+        catch {
+            $read_bytes_type = 'dotnet'
+        }
+
         $badFiles = @(
             foreach ($file in $files)
             {
-                $content = ([char[]](Get-Content $file.FullName -encoding byte -totalcount 3) -join '')
+                # Ignore previous TestResults.xml
+                if ($file -match "TestResults.xml") {
+                    continue
+                }
+                $buffer = read_bytes -FileName "$($file.FullName)" -Size 3
+                $content = ([char[]]$buffer -join '')
                 if ([regex]::match($content, '(?ms)^\xEF\xBB\xBF').success)
                 {
                     $file.FullName
@@ -117,6 +146,10 @@ describe 'Style constraints for non-binary project files' {
         $badFiles = @(
             foreach ($file in $files)
             {
+                # Ignore previous TestResults.xml
+                if ($file -match "TestResults.xml") {
+                    continue
+                }
                 $string = [System.IO.File]::ReadAllText($file.FullName)
                 if ($string.Length -gt 0 -and $string[-1] -ne "`n")
                 {
@@ -163,6 +196,10 @@ describe 'Style constraints for non-binary project files' {
         $badLines = @(
             foreach ($file in $files)
             {
+                # Ignore previous TestResults.xml
+                if ($file -match "TestResults.xml") {
+                    continue
+                }
                 $lines = [System.IO.File]::ReadAllLines($file.FullName)
                 $lineCount = $lines.Count
 

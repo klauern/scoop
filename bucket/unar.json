@@ -1,14 +1,9 @@
 {
-    "homepage": "https://unarchiver.c3.cx/commandline",
-    "license": "GPL2.1",
+    "homepage": "https://theunarchiver.com/command-line",
+    "license": "GPL-2.0",
     "version": "1.8.1",
-    "url": [
-        "https://unarchiver.c3.cx/downloads/unar1.8.1_win.zip"
-    ],
-    "hash": [
-        "2fa1ea5ddc2b2615b94b2d00cd19fcbf9165cffb5346e83d3b2643e7a55c1e95"
-    ],
-    "extract_dir": ".",
+    "url": "https://cdn.theunarchiver.com/downloads/unarWindows.zip",
+    "hash": "61A6B299606282F72F51C278801EAC11D3DCCFAC83E2D68BCCCE33539912E0DD",
     "bin": [
         "lsar.exe",
         "unar.exe"
