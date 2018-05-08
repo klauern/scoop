@@ -10,7 +10,7 @@ function nightly_version($date, $quiet = $false) {
 }
 
 function install_app($app, $architecture, $global, $suggested, $use_cache = $true) {
-    $app, $bucket = app $app
+    $app, $bucket, $null = parse_app $app
     $app, $manifest, $bucket, $url = locate $app $bucket
     $check_hash = $true
 
@@ -20,7 +20,7 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
 
     $version = $manifest.version
     if(!$version) { abort "Manifest doesn't specify a version." }
-    if($version -match '[^\w\.\-_]') {
+    if($version -match '[^\w\.\-\+_]') {
         abort "Manifest version has unsupported character '$($matches[0])'."
     }
 
@@ -57,7 +57,6 @@ function install_app($app, $architecture, $global, $suggested, $use_cache = $tru
     # persist data
     persist_data $manifest $original_dir $persist_dir
 
-    # env_ensure_home $manifest $global (see comment for env_ensure_home)
     post_install $manifest $architecture
 
     # save info for uninstall
@@ -682,14 +681,16 @@ function create_shims($manifest, $dir, $global, $arch) {
         $target, $name, $arg = shim_def $_
         write-output "Creating shim for '$name'."
 
-        # check valid bin
-        $bin = "$dir\$target"
-        if(!(is_in_dir $dir $bin)) {
-            abort "Error in manifest: bin '$target' is outside the app directory."
+        if(test-path "$dir\$target" -pathType leaf) {
+            $bin = "$dir\$target"
+        } elseif(test-path $target -pathType leaf) {
+            $bin = $target
+        } else {
+            $bin = search_in_path $target
         }
-        if(!(test-path $bin)) { abort "Can't shim '$target': File doesn't exist."}
+        if(!$bin) { abort "Can't shim '$target': File doesn't exist."}
 
-        shim "$dir\$target" $global $name (substitute $arg @{ '$dir' = $dir; '$original_dir' = $original_dir; '$persist_dir' = $persist_dir})
+        shim $bin $global $name (substitute $arg @{ '$dir' = $dir; '$original_dir' = $original_dir; '$persist_dir' = $persist_dir})
     }
 }
 
@@ -862,29 +863,6 @@ function env_rm($manifest, $global) {
     }
 }
 
-# UNNECESSARY? Re-evaluate after 3-Jun-2017
-# Supposedly some MSYS programs require %HOME% to be set, but I can't
-# find any examples.
-# Shims used to set %HOME% for the session, but this was removed.
-# This function remains in case we need to support this functionality again
-# (e.g. env_ensure_home in manifests). But if no problems arise by 3-Jun-2017,
-# it's probably safe to delete this, and the call to it install_app
-function env_ensure_home($manifest, $global) {
-    if($manifest.env_ensure_home -eq $true) {
-        if($global){
-            if(!(env 'HOME' $true)) {
-                env 'HOME' $true $env:ALLUSERSPROFILE
-                $env:HOME = $env:ALLUSERSPROFILE # current session
-            }
-        } else {
-            if(!(env 'HOME' $false)) {
-                env 'HOME' $false $env:USERPROFILE
-                $env:HOME = $env:USERPROFILE # current session
-            }
-        }
-    }
-}
-
 function pre_install($manifest, $arch) {
     $pre_install = arch_specific 'pre_install' $manifest $arch
     if($pre_install) {
@@ -911,7 +889,7 @@ function show_notes($manifest, $dir, $original_dir, $persist_dir) {
 
 function all_installed($apps, $global) {
     $apps | Where-Object {
-        $app, $null = app $_
+        $app, $null, $null = parse_app $_
         installed $app $global
     }
 }
@@ -952,7 +930,7 @@ function show_suggestions($suggested) {
 
             $fulfilled = $false
             foreach($suggestion in $feature_suggestions) {
-                $suggested_app, $bucket = app $suggestion
+                $suggested_app, $bucket, $null = parse_app $suggestion
 
                 if($installed_apps -contains $suggested_app) {
                     $fulfilled = $true;
