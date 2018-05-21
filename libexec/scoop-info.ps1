@@ -46,19 +46,19 @@ if($status.installed) {
     }
 }
 
-Write-Output "Name:      $app"
+Write-Output "Name: $app"
 if ($manifest.description) {
-    Write-Output "  $($manifest.description)"
+    Write-Output "Description: $($manifest.description)"
 }
-Write-Output "Version:   $version_output"
-Write-Output "Website:   $($manifest.homepage)"
+Write-Output "Version: $version_output"
+Write-Output "Website: $($manifest.homepage)"
 # Show license
 if ($manifest.license) {
     $license = $manifest.license
     if($manifest.license -notmatch '^((ht)|f)tps?://') {
         $license = "$($manifest.license) (https://spdx.org/licenses/$($manifest.license).html)"
     }
-    Write-Output "License:   $license"
+    Write-Output "License: $license"
 }
 
 # Manifest file
@@ -79,7 +79,15 @@ if($status.installed) {
 
 $binaries = arch_specific 'bin' $manifest $install.architecture
 if($binaries) {
-    Write-Output "Binaries:`n  $binaries"
+    $binary_output = "Binaries:`n  "
+    $binaries | ForEach-Object {
+        if($_ -is [System.Array]) {
+            $binary_output += " $($_[1]).exe"
+        } else {
+            $binary_output += " $_"
+        }
+    }
+    Write-Output $binary_output
 }
 
 if($manifest.env_set -or $manifest.env_add_path) {

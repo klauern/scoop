@@ -1,18 +1,18 @@
 {
     "homepage": "http://www.vim.org",
     "license": "Vim",
-    "version": "8.0.1803",
+    "version": "8.1.0010",
     "architecture": {
         "32bit": {
-            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1803/gvim_8.0.1803_x86.zip",
-            "hash": "9f5474fe068bc87320682f6a536b4e2d5b6a1067d24346f36f94d7fa642870c1"
+            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.1.0010/gvim_8.1.0010_x86.zip",
+            "hash": "aff49e06c2ecc861d6e3f82bcb05a499cc5179bfa19222759c60c343c4f00857"
         },
         "64bit": {
-            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.0.1803/gvim_8.0.1803_x64.zip",
-            "hash": "3eec8de80e077625e84b0e6ec93adb6a2954c4963b7d57501dfb0dcf7f1944c0"
+            "url": "https://github.com/vim/vim-win32-installer/releases/download/v8.1.0010/gvim_8.1.0010_x64.zip",
+            "hash": "16738557292c817b7b23a0101f7fd428d882e5670c317b8b0a4d4fd427a97e7d"
         }
     },
-    "extract_dir": "vim\\vim80",
+    "extract_dir": "vim\\vim81",
     "bin": [
         "vim.exe",
         [
@@ -87,14 +87,13 @@
     "autoupdate": {
         "architecture": {
             "32bit": {
-                "url": "https://github.com/vim/vim-win32-installer/releases/download/v$version/gvim_$version_x86.zip",
-                "extract_dir": "vim\\vim$majorVersion$minorVersion"
+                "url": "https://github.com/vim/vim-win32-installer/releases/download/v$version/gvim_$version_x86.zip"
             },
             "64bit": {
-                "url": "https://github.com/vim/vim-win32-installer/releases/download/v$version/gvim_$version_x64.zip",
-                "extract_dir": "vim\\vim$majorVersion$minorVersion"
+                "url": "https://github.com/vim/vim-win32-installer/releases/download/v$version/gvim_$version_x64.zip"
             }
-        }
+        },
+        "extract_dir": "vim\\vim$majorVersion$minorVersion"
     },
     "suggest": {
         "vimtutor": "vimtutor"
